@@ -1,0 +1,36 @@
+{
+  "name": "paper-search-web",
+  "private": true,
+  "version": "0.3.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "predev": "node scripts/pdf-assets.mjs",
+    "prebuild": "node scripts/pdf-assets.mjs",
+    "build": "tsc -b && vite build",
+    "generate:api": "python ../scripts/export_openapi.py && openapi-typescript openapi.json -o src/generated/api.d.ts",
+    "preview": "vite preview",
+    "format": "prettier --write src scripts index.html vite.config.ts",
+    "format:check": "prettier --check src scripts index.html vite.config.ts"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "pdfjs-dist": "^6.3.289",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.2",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "3.9.6",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.4"
+  }
+}

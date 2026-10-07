@@ -1,0 +1,16 @@
+# 目录用于名称与领域识别；不是录用状态或每篇论文质量的证明。
+venues:
+  - {name: NeurIPS, aliases: [Neural Information Processing Systems], field: machine-learning, source: 'https://neurips.cc/'}
+  - {name: ICML, aliases: [International Conference on Machine Learning], field: machine-learning, source: 'https://icml.cc/'}
+  - {name: ICLR, aliases: [International Conference on Learning Representations], field: machine-learning, source: 'https://iclr.cc/'}
+  - {name: ACL, aliases: [Association for Computational Linguistics], field: nlp, source: 'https://aclanthology.org/'}
+  - {name: EMNLP, aliases: [Empirical Methods in Natural Language Processing], field: nlp, source: 'https://aclanthology.org/'}
+  - {name: NAACL, aliases: [North American Chapter of the Association for Computational Linguistics], field: nlp, source: 'https://aclanthology.org/'}
+  - {name: CVPR, aliases: [Computer Vision and Pattern Recognition], field: vision, source: 'https://openaccess.thecvf.com/'}
+  - {name: ICCV, aliases: [International Conference on Computer Vision], field: vision, source: 'https://openaccess.thecvf.com/'}
+  - {name: ECCV, aliases: [European Conference on Computer Vision], field: vision, source: 'https://www.ecva.net/'}
+  - {name: SIGIR, aliases: [Special Interest Group on Information Retrieval], field: retrieval, source: 'https://sigir.org/'}
+  - {name: KDD, aliases: [Knowledge Discovery and Data Mining], field: data-mining, source: 'https://kdd.org/'}
+  - {name: TACL, aliases: [Transactions of the Association for Computational Linguistics], field: nlp, source: 'https://transacl.org/'}
+  - {name: JMLR, aliases: [Journal of Machine Learning Research], field: machine-learning, source: 'https://www.jmlr.org/'}
+  - {name: TPAMI, aliases: [IEEE Transactions on Pattern Analysis and Machine Intelligence], field: vision, source: 'https://www.computer.org/csdl/journal/tp'}

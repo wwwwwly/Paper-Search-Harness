@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paper-search-agent"
+version = "0.3.0"
+description = "A conversational, evidence-grounded research workbench"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.11"
+dependencies = [
+    "aiosqlite>=0.20,<1",
+    "fastapi>=0.115,<1",
+    "httpx>=0.28,<1",
+    "beautifulsoup4>=4.12,<5",
+    "mcp>=2.2,<3",
+    "openai>=2,<3",
+    "pydantic>=2,<3",
+    "PyYAML>=6,<7",
+    "sqlalchemy>=2,<3",
+    "sqlite-vec>=0.1.6,<1",
+    "tiktoken>=0.11,<1",
+    "jsonschema>=4.20,<5",
+    "python-multipart>=0.0.20,<1",
+    "pypdf>=5,<7",
+    "httpx2>=2.5,<3",
+    "filelock>=3,<4",
+    "uvicorn>=0.34,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.16,<0.17",
+]
+
+[tool.setuptools.packages.find]
+where = ["backend"]
+include = ["paper_search*"]
+
+[tool.setuptools.package-data]
+paper_search = ["config/*.yaml", "prompts/*.md", "skills/*/SKILL.md", "skills/*/references/*"]
+
+[tool.ruff.lint]
+ignore = ["B008", "TRY004"]

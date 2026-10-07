@@ -1,0 +1,54 @@
+# Copy this complete file to config.local.yaml to customize your setup.
+# Keep credentials in environment variables or the ignored local copy.
+database_url: sqlite+aiosqlite:///./data/research.db
+data_dir: data
+models:
+  deepseek-v4.1-flash:
+    model: deepseek-v4.1-flash
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    capabilities_url: https://dashscope.aliyuncs.com/api/v1/models
+    context_window: 1000000
+    max_output_tokens_supported: 393216
+    capability_source: release_config
+    supported_reasoning_efforts:
+      - low
+      - high
+      - max
+    api_key: "" # PAPER_SEARCH_MODEL_API_KEY
+    input_cny_per_million: 2
+    output_cny_per_million: 8
+    cached_input_cny_per_million: 0.2
+embedding:
+  enabled: false
+  model: qwen3.7-text-embedding
+  base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  dimensions: 256
+  api_key: "" # PAPER_SEARCH_EMBEDDING_API_KEY
+providers:
+  - arxiv
+context_compression:
+  strategy: collapse
+  idle_ttl_seconds: 3600
+mcp: []
+default_effort: quick
+efforts:
+  quick:
+    model_profile: deepseek-v4.1-flash
+    reasoning_effort: low
+    context_output_headroom: 65536
+    limits:
+      target_seconds: 90
+      deadline_seconds: 180
+      finalization_reserve_seconds: 30
+      max_concurrent_workers: 0
+      soft_token_target: 64000
+  deep:
+    model_profile: deepseek-v4.1-flash
+    reasoning_effort: high
+    context_output_headroom: 131072
+    limits:
+      target_seconds: 600
+      deadline_seconds: 900
+      finalization_reserve_seconds: 90
+      max_concurrent_workers: 3
+      soft_token_target: 256000

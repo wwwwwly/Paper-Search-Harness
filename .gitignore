@@ -1,0 +1,41 @@
+# Credentials and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.local.yaml
+*.local.yml
+*.pem
+*.key
+
+# Local research state, source documents and model traces
+/data/
+*.db
+*.db-shm
+*.db-wal
+*.log
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Frontend dependencies and generated build assets
+node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/public/pdf-assets/
+frontend/openapi.json
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

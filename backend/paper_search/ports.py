@@ -1,0 +1,219 @@
+"""Replaceable boundaries; consumers never import concrete adapters."""
+
+from __future__ import annotations
+
+from collections.abc import AsyncIterator, Awaitable, Callable
+from dataclasses import dataclass
+from datetime import date
+from typing import Any, Protocol, Self
+
+from pydantic import BaseModel
+
+from paper_search.domain import (
+    Artifact,
+    Delivery,
+    Document,
+    Evidence,
+    IndexHit,
+    IndexRecord,
+    Job,
+    Memory,
+    Message,
+    ModelEvent,
+    ModelRequest,
+    Paper,
+    PaperResolution,
+    ParsedDocument,
+    ResearchBoard,
+    Run,
+    Session,
+    SourceSnapshot,
+    ToolExecution,
+)
+from paper_search.events import SessionEvent
+
+
+class SessionRepository(Protocol):
+    async def get(self, session_id: str) -> Session: ...
+    async def save(self, session: Session) -> None: ...
+    async def list(self) -> list[Session]: ...
+    async def messages(
+        self, session_id: str, *, before: str | None = None, limit: int = 1000
+    ) -> list[Message]: ...
+    async def append_message(self, message: Message) -> None: ...
+    async def find_client_message(
+        self, session_id: str, client_id: str
+    ) -> Message | None: ...
+    async def append_event(
+        self, session_id: str, run_id: str | None, event_type: str, data: dict[str, Any]
+    ) -> SessionEvent: ...
+    async def events(
+        self, session_id: str, after: int = 0, limit: int = 250
+    ) -> list[SessionEvent]: ...
+
+
+class RunRepository(Protocol):
+    async def model_state(self, message_id: str) -> str | None: ...
+    async def save_model_state(self, message_id: str, file_id: str) -> None: ...
+    async def get(self, run_id: str) -> Run: ...
+    async def save(self, run: Run) -> None: ...
+    async def list(self, session_id: str | None = None) -> list[Run]: ...
+    async def tool(self, run_id: str, call_id: str) -> ToolExecution | None: ...
+    async def save_tool(self, execution: ToolExecution) -> None: ...
+    async def tools(self, run_id: str) -> list[ToolExecution]: ...
+
+
+class JobRepository(Protocol):
+    async def get(self, job_id: str) -> Job: ...
+    async def enqueue(self, job: Job) -> None: ...
+    async def claim(
+        self, job_id: str, owner: str, lease_seconds: int
+    ) -> Job | None: ...
+    async def save(self, job: Job) -> None: ...
+    async def pending_outbox(self) -> list[Job]: ...
+    async def mark_published(self, delivery_id: str) -> None: ...
+    async def list(self) -> list[Job]: ...
+
+
+class PaperRepository(Protocol):
+    async def find_by_identifiers(self, keys: set[str]) -> list[Paper]: ...
+    async def remap(self, old: str, new: str) -> None: ...
+    async def get(self, paper_id: str) -> Paper: ...
+    async def get_many(self, paper_ids: set[str]) -> dict[str, Paper]: ...
+    async def save(self, paper: Paper) -> None: ...
+    async def remove(self, paper_id: str) -> None: ...
+    async def list(self) -> list[Paper]: ...
+    async def save_evidence(self, evidence: Evidence) -> None: ...
+    async def evidence(self, evidence_id: str) -> Evidence: ...
+    async def list_evidence(self, session_id: str) -> list[Evidence]: ...
+
+
+class DocumentRepository(Protocol):
+    async def get(self, document_id: str) -> Document: ...
+    async def save(self, document: Document) -> None: ...
+    async def list(self, session_id: str | None = None) -> list[Document]: ...
+
+
+class MemoryRepository(Protocol):
+    async def get(self, memory_id: str) -> Memory: ...
+    async def save(self, memory: Memory) -> None: ...
+    async def list(
+        self, session_id: str | None = None, *, include_deleted: bool = False
+    ) -> list[Memory]: ...
+
+
+class ArtifactRepository(Protocol):
+    async def save(self, artifact: Artifact) -> None: ...
+    async def get(self, artifact_id: str) -> Artifact: ...
+    async def list(self, session_id: str | None = None) -> list[Artifact]: ...
+
+
+class ResearchRepository(Protocol):
+    async def get(self, session_id: str) -> ResearchBoard: ...
+    async def save(self, record: ResearchBoard) -> None: ...
+    async def snapshot(self, snapshot_id: str) -> SourceSnapshot: ...
+    async def save_snapshot(self, snapshot: SourceSnapshot) -> None: ...
+
+
+class UnitOfWork(Protocol):
+    sessions: SessionRepository
+    runs: RunRepository
+    jobs: JobRepository
+    papers: PaperRepository
+    documents: DocumentRepository
+    memories: MemoryRepository
+    artifacts: ArtifactRepository
+    research: ResearchRepository
+
+    async def __aenter__(self) -> Self: ...
+    async def __aexit__(self, *args: object) -> None: ...
+
+
+UowFactory = Callable[[], UnitOfWork]
+
+
+class StructuredCompletion(Protocol):
+    async def __call__(
+        self,
+        prompt: str,
+        output_type: type[BaseModel | str],
+        *,
+        purpose: str = "structured",
+    ) -> Any: ...
+
+
+@dataclass
+class AgentCallbacks:
+    complete: StructuredCompletion
+    spawn: Callable[[Any], Awaitable[Any]]
+    collect: Callable[[tuple[str, ...], int, int], Awaitable[Any]]
+    send: Callable[[str, str], Awaitable[Any]]
+    cancel: Callable[[str, str], Awaitable[Any]]
+
+
+class DeliveryQueue(Protocol):
+    async def publish(self, job: Job) -> None: ...
+    async def receive(self, kind: str) -> Delivery | None: ...
+    async def ack(self, delivery: Delivery) -> None: ...
+    async def retry(self, delivery: Delivery, delay_seconds: float) -> None: ...
+
+
+class ArtifactStore(Protocol):
+    async def put(self, data: bytes) -> str: ...
+    async def read(self, file_id: str) -> bytes: ...
+    def local_path(self, file_id: str) -> str: ...
+
+
+class SearchIndex(Protocol):
+    async def upsert(
+        self, record: IndexRecord, vector: list[float] | None = None
+    ) -> None: ...
+    async def delete(self, record_id: str) -> None: ...
+    async def search(
+        self,
+        query: str,
+        *,
+        kind: str,
+        scopes: tuple[str, ...],
+        vector: list[float] | None = None,
+        limit: int = 10,
+        document_id: str | None = None,
+    ) -> list[IndexHit]: ...
+
+
+class SearchProvider(Protocol):
+    name: str
+
+    async def search(
+        self,
+        query: str,
+        *,
+        date_from: date | None,
+        date_to: date | None,
+        open_access_only: bool,
+        limit: int,
+        mode: str = "keyword",
+        offset: int = 0,
+        sort: str = "relevance",
+    ) -> tuple[Paper, ...]: ...
+
+
+class PaperResolver(Protocol):
+    def accepts(self, identifier: str) -> bool: ...
+    async def resolve(self, identifier: str) -> PaperResolution: ...
+
+
+class ModelClient(Protocol):
+    def stream(self, request: ModelRequest) -> AsyncIterator[ModelEvent]: ...
+
+
+class EmbeddingClient(Protocol):
+    async def embed(self, texts: list[str]) -> list[list[float]]: ...
+
+
+class DocumentParser(Protocol):
+    async def parse(self, path: str) -> ParsedDocument: ...
+
+
+class DocumentDownloader(Protocol):
+    async def fetch(self, url: str, max_bytes: int) -> bytes: ...
